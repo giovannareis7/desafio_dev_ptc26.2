@@ -41,3 +41,9 @@ export const vendaPlanta = async (id: number, quantidade: number) => {
         data: { estoque: { decrement: quantidade } },
     });
 };
+
+export const findPreco_Estoque = async () => {
+    return await prisma.planta.findMany({
+        select: { preco: true, estoque: true },
+    });
+};

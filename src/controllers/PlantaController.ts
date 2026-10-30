@@ -228,3 +228,22 @@ export const venderPlanta = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Erro ao vender planta." });
   }
 };
+
+export const readValorTotalEstoque = async (req: Request, res: Response) => {
+  try {
+    const plantas = await PlantaRepository.findPreco_Estoque();
+
+    let valorTotal = 0;
+    let totalDeVasos = 0;
+
+    for (const planta of plantas) {
+      valorTotal += planta.preco * planta.estoque;
+      totalDeVasos += planta.estoque;
+    }
+
+    return res.status(200).json({ valorTotal, totalDeVasos });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Erro ao calcular o valor total do estoque." });
+  }
+};
