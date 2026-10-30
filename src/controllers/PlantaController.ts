@@ -133,7 +133,7 @@ export const readPlantaById = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updatePlanta = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
 
@@ -173,7 +173,7 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deletePlanta = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
 
