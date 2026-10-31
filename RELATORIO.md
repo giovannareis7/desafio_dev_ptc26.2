@@ -76,4 +76,6 @@ Usei IA para:
 - Entender o código de exemplo;
 - Ajuda com erros;
 - Perguntar comandos que eu não sabia;
-- Estruturar o relatório.
+- Estruturar o relatório;
+- Revisar o código e ver se tinha erros;
+- Pedir ajuda com algumas partes que eu não estava entendendo com fazer do código;
