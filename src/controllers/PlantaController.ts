@@ -9,7 +9,7 @@ const validacao_de_campos = (dados: any) => {
     const {nome, especie, preco, estoque, luminosidade, petFriendly, regaACadaDias } = dados;
 
     if(nome !== undefined && (typeof nome !== "string" || nome.trim() === "")) {
-        return "nome não pode ser um texto vazio."
+        return "nome não pode ser um texto vazio.";
     }
 
     if (especie !== undefined && (typeof especie !== "string" || especie.trim() === "")) {
@@ -85,7 +85,7 @@ export const createPlanta = async (req: Request, res: Response) => {
 export const readAllPlantas = async (req: Request, res: Response) => {
   try {
 
-    const { luminosidade, petFriendly } = req.query;
+    const { luminosidade, petFriendly, nome, ordem } = req.query;
 
     if (luminosidade !== undefined && !Object.values(Luminosidade).includes(luminosidade as Luminosidade)) {
         return res.status(400).json({ message: "luminosidade deve ser SOMBRA, MEIA_SOMBRA ou SOL_PLENO."});
@@ -101,7 +101,20 @@ export const readAllPlantas = async (req: Request, res: Response) => {
         return res.status(400).json({ message: "petFriendly deve ser true ou false."});
     }
 
-    const plantas = await PlantaRepository.findAllPlantas({ luminosidade: luminosidade as Luminosidade | undefined, petFriendly: petFriendlyFiltro, });
+    if (nome !== undefined && typeof nome !== "string") {
+      return res.status(400).json({ message: "nome deve ser um texto." });
+    }
+
+    if (ordem !== undefined && ordem !== "preco" && ordem !== "nome") {
+      return res.status(400).json({ message: "ordem deve ser preco ou nome." });
+    }
+
+    const plantas = await PlantaRepository.findAllPlantas({ 
+      luminosidade: luminosidade as Luminosidade | undefined, 
+      petFriendly: petFriendlyFiltro,
+      nome: nome,
+      ordem: ordem   
+    });
 
     return res.status(200).json(plantas);
   } catch (error) {
@@ -146,11 +159,11 @@ export const updatePlanta = async (req: Request, res: Response) => {
         return res.status(400). json({ message: erro});
     }
 
-    // Antes de editar, garantimos que o usuário existe
+    // Antes de editar, garantimos que a planta existe
     const planta = await PlantaRepository.findPlantaById(id);
 
     if (!planta) {
-      return res.status(404).json({ message: "Planta não encontrado." });
+      return res.status(404).json({ message: "Planta não encontrada." });
     }
 
     const { nome, especie, preco, estoque, luminosidade, petFriendly, regaACadaDias } = req.body;
@@ -220,9 +233,15 @@ export const venderPlanta = async (req: Request, res: Response) => {
       return res.status(400).json({ message: `Estoque insuficiente: temos só ${planta.estoque} vasos.`});
     }
 
-    const updatePlanta = await PlantaRepository.vendaPlanta(id, quantidade);
+    const resultado = await PlantaRepository.venderPlanta(id, quantidade);
 
-    return res.status(200).json(updatePlanta);
+    if (resultado.count === 0) {
+      return res.status(400).json({ message: "Estoque insuficiente: outra compra acabou de levar esses vasos." });
+    }
+
+    const atualizaçãoPlanta = await PlantaRepository.findPlantaById(id);
+
+    return res.status(200).json(atualizaçãoPlanta);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Erro ao vender planta." });
@@ -233,17 +252,28 @@ export const readValorTotalEstoque = async (req: Request, res: Response) => {
   try {
     const plantas = await PlantaRepository.findPreco_Estoque();
 
-    let valorTotal = 0;
+    let valorTotalEmCentavos = 0;
     let totalDeVasos = 0;
 
     for (const planta of plantas) {
-      valorTotal += planta.preco * planta.estoque;
+      valorTotalEmCentavos += planta.preco * planta.estoque;
       totalDeVasos += planta.estoque;
     }
 
-    return res.status(200).json({ valorTotal, totalDeVasos });
+    return res.status(200).json({ valorTotalEmCentavos, totalDeVasos });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Erro ao calcular o valor total do estoque." });
+  }
+};
+
+export const readPlantasEsgotadas = async (req: Request, res: Response) => {
+  try {
+    const plantas = await PlantaRepository.findPlantasEsgotadas();
+
+    return res.status(200).json(plantas);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Erro ao buscar plantas esgotadas." });
   }
 };
